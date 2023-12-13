@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TextInput, Button, Alert } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TextInput,
+  Button,
+  Alert,
+  TouchableOpacity,
+} from 'react-native';
 import Header from '../../components/Header';
 import Balance from '../../components/Balance';
 import Movements from '../../components/Movements';
@@ -7,24 +16,22 @@ import Actions from '../../components/Actions';
 
 const Home = () => {
   const [transactions, setTransactions] = useState([]);
-  const [balance, setBalance] = useState('0'); // Inicializado com zero
-  const [expenses, setExpenses] = useState('0'); // Inicializado com zero
+  const [balance, setBalance] = useState('0');
+  const [expenses, setExpenses] = useState('0');
 
   const [newTransaction, setNewTransaction] = useState({
     id: '',
     label: '',
     value: '',
-    date: '',
     type: 0,
   });
 
   const validateLabel = () => /^[a-zA-Z0-9]+$/.test(newTransaction.label);
   const validateValue = () => /^[0-9]+$/.test(newTransaction.value);
-  const validateDate = () => /^\d{2}\/\d{2}\/\d{4}$/.test(newTransaction.date);
 
   const addTransaction = () => {
     if (!validateLabel()) {
-      Alert.alert('Erro', 'O campo "Despeza" deve conter apenas letras ou números.');
+      Alert.alert('Erro', 'O campo "Despesa" deve conter apenas letras ou números.');
       return;
     }
 
@@ -33,13 +40,8 @@ const Home = () => {
       return;
     }
 
-    if (!validateDate()) {
-      Alert.alert('Erro', 'O campo "Data" deve ter o formato DD/MM/YYYY.');
-      return;
-    }
-
     const newId = transactions.length + 1;
-    const newValue = parseFloat(newTransaction.value.replace(',', '.')) || 0; // Convertendo para número
+    const newValue = parseFloat(newTransaction.value.replace(',', '.')) || 0;
     const updatedExpenses = parseFloat(expenses.replace(',', '.')) + newValue;
 
     setTransactions([
@@ -49,15 +51,14 @@ const Home = () => {
         ...newTransaction,
       },
     ]);
-    setExpenses(updatedExpenses.toFixed(2)); // Limitando para 2 casas decimais
-    setNewTransaction({ label: '', value: '', date: '', type: 0 });
+    setExpenses(updatedExpenses.toFixed(2));
+    setNewTransaction({ label: '', value: '', type: 0 });
   };
 
   const removeTransaction = (id) => {
     const updatedTransactions = transactions.filter((item) => item.id !== id);
     setTransactions(updatedTransactions);
 
-    // Atualizar os gastos após remover a transação
     const updatedExpenses = updatedTransactions.reduce((total, item) => {
       return total + parseFloat(item.value.replace(',', '.')) || 0;
     }, 0);
@@ -65,16 +66,40 @@ const Home = () => {
     setExpenses(updatedExpenses.toFixed(2));
   };
 
+  const editBalance = () => {
+    Alert.prompt(
+      'Editar Saldo',
+      'Insira o novo valor do saldo:',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Salvar',
+          onPress: (value) => {
+            const newBalance = parseFloat(value.replace(',', '.')) || 0;
+            setBalance(newBalance.toFixed(2));
+          },
+        },
+      ],
+      'plain-text',
+      balance
+    );
+  };
+
   useEffect(() => {
     const totalBalance = parseFloat(balance.replace(',', '.')) - parseFloat(expenses.replace(',', '.'));
 
-    setBalance(totalBalance.toFixed(2)); // Limitando para 2 casas decimais
+    setBalance(totalBalance.toFixed(2));
   }, [expenses]);
 
   return (
     <View style={styles.container}>
       <Header name="Matheus Granda" />
-      <Balance saldo={balance.toString()} gastos={expenses.toString()} />
+      <TouchableOpacity onPress={editBalance}>
+        <Balance saldo={balance.toString()} gastos={expenses.toString()} />
+      </TouchableOpacity>
 
       <Actions />
 
@@ -85,13 +110,20 @@ const Home = () => {
         data={transactions}
         keyExtractor={(item) => String(item.id)}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => <Movements data={item} onRemove={() => removeTransaction(item.id)} />}
+        renderItem={({ item }) => (
+          <View style={styles.transactionItem}>
+            <Movements data={item} />
+            <TouchableOpacity onPress={() => removeTransaction(item.id)}>
+              <Text style={styles.removeButton}>Remover</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       />
 
       <View style={styles.addTransactionContainer}>
         <TextInput
           style={styles.input}
-          placeholder="Despeza"
+          placeholder="Despesa"
           value={newTransaction.label}
           onChangeText={(text) => setNewTransaction({ ...newTransaction, label: text })}
         />
@@ -102,13 +134,7 @@ const Home = () => {
           onChangeText={(text) => setNewTransaction({ ...newTransaction, value: text })}
           keyboardType="numeric"
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Data"
-          value={newTransaction.date}
-          onChangeText={(text) => setNewTransaction({ ...newTransaction, date: text })}
-        />
-        <Button title="Adicionar despeza" onPress={addTransaction} />
+        <Button title="Adicionar despesa" onPress={addTransaction} />
       </View>
     </View>
   );
@@ -128,11 +154,25 @@ const styles = StyleSheet.create({
     marginStart: 14,
     marginEnd: 14,
   },
+  transactionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  removeButton: {
+    color: 'red',
+    fontWeight: 'bold',
+  },
   addTransactionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
     margin: 14,
   },
   input: {
     height: 40,
+    width: '80%',  
     borderColor: 'gray',
     borderWidth: 1,
     marginBottom: 10,
