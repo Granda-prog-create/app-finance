@@ -13,11 +13,13 @@ import Header from '../../components/Header';
 import Balance from '../../components/Balance';
 import Movements from '../../components/Movements';
 import Actions from '../../components/Actions';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 const Home = () => {
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState('0');
   const [expenses, setExpenses] = useState('0');
+  const [userName, setUserName] = useState('name');
 
   const [newTransaction, setNewTransaction] = useState({
     id: '',
@@ -44,15 +46,20 @@ const Home = () => {
     const newValue = parseFloat(newTransaction.value.replace(',', '.')) || 0;
     const updatedExpenses = parseFloat(expenses.replace(',', '.')) + newValue;
 
-    setTransactions([
-      ...transactions,
+    setTransactions((prevTransactions) => [
+      ...prevTransactions,
       {
         id: newId,
         ...newTransaction,
       },
     ]);
     setExpenses(updatedExpenses.toFixed(2));
-    setNewTransaction({ label: '', value: '', type: 0 });
+    setNewTransaction((prevTransaction) => ({
+      ...prevTransaction,
+      label: '',
+      value: '',
+      type: 0,
+    }));
   };
 
   const removeTransaction = (id) => {
@@ -96,7 +103,7 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
-      <Header name="Matheus Granda" />
+      <Header name="" />
       <TouchableOpacity onPress={editBalance}>
         <Balance saldo={balance.toString()} gastos={expenses.toString()} />
       </TouchableOpacity>
