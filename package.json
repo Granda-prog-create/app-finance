@@ -13,6 +13,7 @@
     "expo": "~47.0.12",
     "expo-status-bar": "~1.4.2",
     "moti": "^0.23.7",
+    "node": "^21.2.0",
     "react": "18.2.0",
     "react-native": "0.73.1",
     "react-native-reanimated": "~2.12.0"
